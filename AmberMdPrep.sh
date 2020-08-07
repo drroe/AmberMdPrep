@@ -1,6 +1,12 @@
 #!/bin/bash
 
-# Minimization for explicit solvent.
+# AmberMdPrep.sh
+# Wrapper script for preparing explicitly solvated systems for MD with Amber.
+# Daniel R. Roe
+# NIH/NHLBI
+# 2020-08-07
+
+VERSION='0.1 (beta)'
 MPIRUN=`which mpirun`
 CPPTRAJ=`which cpptraj`
 
@@ -379,6 +385,7 @@ Help() {
 }
 # ==============================================================================
 
+echo "AmberMdPrep.sh Version $VERSION"
 # Parse command line options
 while [ ! -z "$1" ] ; do
   case "$1" in
@@ -942,7 +949,7 @@ if [ -z "$RUNTYPE" ] ; then
     RUNTYPE='input'
   fi
 fi
-
+# ==============================================================================
 echo ""
 if [ "$RUNTYPE" = 'standard' ] ; then
   echo "Performing standard min/equil"
