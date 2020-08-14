@@ -41,10 +41,10 @@ NUNKNOWN=0 # Number of unknown residues
 NCHARMMWATER=0
 NWATER=0
 LIPIDRESNAMES=''       # Comma-separated list of unique lipid residue names
-THERMOTYPE='berendsen' # Thermostat type
-BAROTYPE='berendsen'   # Barostat type
-FINALTHERMO='langevin' # Thermostat for final density eq.
-FINALBARO='montecarlo' # Barostat for final density eq.
+THERMOTYPE='langevin'   # Thermostat type
+BAROTYPE='montecarlo'   # Barostat type
+FINALTHERMO='langevin'  # Thermostat for final density eq.
+FINALBARO='montecarlo'  # Barostat for final density eq.
 NTPFLAG=1 # 1 for isotropic scaling, 2 for anisotropic
 STATUSFILE=''
 
@@ -354,12 +354,14 @@ KeyHelp() {
 # ------------------------------------------------------------------------------
 Help() {
   echo "Command line options"
-  echo "  -i <file>            : File containing minimization steps."
+  echo " Required:"
   echo "  -p <file>            : Topology (required)"
   echo "  -c <file>            : Coordinates (required)"
   echo "  --temp <temp>        : Temperature (required)"
-  echo "  --thermo <type>      : Thermostat: berendsen (default), langevin"
-  echo "  --baro <type>        : Barostat: berendsen (default), montecarlo"
+  echo " Optional:"
+  echo "  -i <file>            : File containing custom minimization steps."
+  echo "  --thermo <type>      : Thermostat: berendsen, langevin (default)"
+  echo "  --baro <type>        : Barostat: berendsen, montecarlo (default)"
   echo "  --finalthermo <type> : Final stage thermostat: berendsen, langevin (default)"
   echo "  --finalbaro <type>   : Final stage barostat: berendsen, montecarlo (default)"
   echo "  --nsolute <#>        : Number of solute residues."

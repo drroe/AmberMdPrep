@@ -7,6 +7,8 @@ Implements the protocol found in the following publication: https://doi.org/10.1
 
 Note that the script is still a BETA version. Use at your own risk.
 
+Requires AmberTools and the GitHub version of [CPPTRAJ](https://github.com/Amber-MD/cpptraj).
+
 Author
 ======
 Daniel R. Roe (<daniel.r.roe@gmail.com>)
@@ -16,14 +18,20 @@ National Institutes of Health, Bethesda, MD.
 
 Documentation
 =============
+
+The most basic usage requires an Amber topology file (`-p`), initial coordinates (`-c`), and
+a target temperature (`--temp`).
+
 ```
 Command line options
-  -i <file>            : File containing minimization steps.
+ Required:
   -p <file>            : Topology (required)
   -c <file>            : Coordinates (required)
   --temp <temp>        : Temperature (required)
-  --thermo <type>      : Thermostat: berendsen (default), langevin
-  --baro <type>        : Barostat: berendsen (default), montecarlo
+ Optional:
+  -i <file>            : File containing custom minimization steps (optional).
+  --thermo <type>      : Thermostat: berendsen, langevin (default)
+  --baro <type>        : Barostat: berendsen, montecarlo (default)
   --finalthermo <type> : Final stage thermostat: berendsen, langevin (default)
   --finalbaro <type>   : Final stage barostat: berendsen, montecarlo (default)
   --nsolute <#>        : Number of solute residues.
