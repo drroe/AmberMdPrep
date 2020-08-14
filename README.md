@@ -7,6 +7,13 @@ Implements the protocol found in the following publication: https://doi.org/10.1
 
 Note that the script is still a BETA version. Use at your own risk.
 
+Author
+======
+Daniel R. Roe (<daniel.r.roe@gmail.com>)
+Laboratory of Computational Biology
+National Heart Lung and Blood Institute
+National Institutes of Health, Bethesda, MD.
+
 Documentation
 =============
 ```
