@@ -45,8 +45,7 @@ Command line options
   --cutoff <cut>       : If specified, override default cutoffs with <cut>.
   --test               : Test only. Do not run.
   --norestart          : Do standard Eq with no restarts.
-  --evaltype <type>    : <type = {script|cpptraj} Evaluate with EvalEquilibration.sh or cpptraj.
-                         If this is not specified, final density eq. (step 10) will be skipped.
+  --skipfinaleq        : If specified, skip final eq. (step 10). 
   --nprocs <#>         : Number of CPU processes to use (default 4).
   -O                   : Overwrite existing files, otherwise skip.
   --keyhelp            : Print help for recognized input file keys.

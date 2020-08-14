@@ -13,7 +13,7 @@ CPPTRAJ=`which cpptraj`
 TEST=0
 INPUT=''
 RUNTYPE=''
-EVALTYPE=''
+EVALTYPE='cpptraj'
 TOP=''
 CRD=''
 REF=''
@@ -375,8 +375,9 @@ Help() {
   echo "  --cutoff <cut>       : If specified, override default cutoffs with <cut>." 
   echo "  --test               : Test only. Do not run."
   echo "  --norestart          : Do standard Eq with no restarts."
-  echo "  --evaltype <type>    : <type = {script|cpptraj} Evaluate with EvalEquilibration.sh or cpptraj."
-  echo "                         If this is not specified, final density eq. (step 10) will be skipped."
+  #echo "  --evaltype <type>    : <type = {script|cpptraj} Evaluate with EvalEquilibration.sh or cpptraj."
+  #echo "                         If this is not specified, final density eq. (step 10) will be skipped."
+  echo "  --skipfinaleq        : If specified, skip final eq. (step 10)."
   echo "  --nprocs <#>         : Number of CPU processes to use (default 4)."
   echo "  -O                   : Overwrite existing files, otherwise skip."
   echo "  --keyhelp            : Print help for recognized input file keys."
@@ -401,7 +402,8 @@ while [ ! -z "$1" ] ; do
     '--baro'        ) shift ; BAROTYPE=$1 ;;
     '--finalthermo' ) shift ; FINALTHERMO=$1 ;;
     '--finalbaro'   ) shift ; FINALBARO=$1 ;;
-    '--evaltype'    ) shift ; EVALTYPE=$1 ;;
+    #'--evaltype'    ) shift ; EVALTYPE=$1 ;;
+    '--skipfinaleq' ) shift ; EVALTYPE='' ;;
     '--mask'        ) shift ; ADDITIONALMASK=$1 ;;
     '--ares'        ) shift ; ADDEDRES="$ADDEDRES $1" ;;
     '--pmask'       ) shift ; PRODUCTIONMASK=$1 ;;
