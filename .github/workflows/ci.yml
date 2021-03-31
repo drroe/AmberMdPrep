@@ -27,7 +27,7 @@ jobs:
           sudo apt-get install gfortran
 
       - name: Checkout source code
-      - uses: actions/checkout@v2
+        uses: actions/checkout@v2
 
       - name: Compile cpptraj and run tests
         shell: bash -lex {0}
