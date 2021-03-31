@@ -34,7 +34,8 @@ DoTest() {
     ((ERRCOUNT++))
     return 1
   fi
-  diff $FILE1 $FILE2 > temp.diff
+  # Allow -I <something> for 3 and 4
+  diff $FILE1 $FILE2 $3 $4 > temp.diff
   if [ -s 'temp.diff' ] ; then
     echo "  $FILE1 $FILE2 are different. Check $FILE2.diff"
     ((ERRCOUNT++))
