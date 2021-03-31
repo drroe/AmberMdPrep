@@ -2,6 +2,23 @@
 
 TESTCOUNT=0
 ERRCOUNT=0
+RUNCOUNT=0
+FAILCOUNT=0
+TEST_OUTPUT='test.out'
+
+if [ -f "$TEST_OUTPUT" ] ; then
+  rm $TEST_OUTPUT
+fi
+
+RunTest() {
+  ((RUNCOUNT++))
+  echo ""
+  echo "TEST: $UNITNAME"
+  ../../AmberMdPrep.sh $* > $TEST_OUTPUT
+  if [ $? -ne 0 ] ; then
+    ((FAILCOUNT++))
+  fi
+}
 
 DoTest() {
   ((TESTCOUNT++))
@@ -32,9 +49,14 @@ DoTest() {
 }
 
 EndTest() {
-  echo ""
+  if [ $FAILCOUNT -gt 0 ] ; then
+    echo "$FAILCOUNT of $RUNCOUNT executions had an error."
+  else
+    echo "All $RUNCOUNT executions ran."
+  fi
   echo "$ERRCOUNT of $TESTCOUNT comparisons failed."
   echo "$OKCOUNT of $TESTCOUNT comparisons passed."
+  echo ""
   exit $ERRCOUNT
 }
 
