@@ -6,7 +6,7 @@
 # NIH/NHLBI
 # 2020-08-07
 
-VERSION='0.2 (beta)'
+VERSION='0.3 (beta)'
 MPIRUN=`which mpirun`
 CPPTRAJ=`which cpptraj`
 
@@ -338,6 +338,7 @@ KeyHelp() {
   echo "  'tempi'"
   echo "  'tautp'"
   echo "  'taup'"
+  echo "  'mcbarint'"
   echo "  'gamma_ln'"
   echo "  'dt'"
   echo "  'nscm'"
@@ -596,8 +597,8 @@ NSTLIM=0
 NTB=0
 TAUTP=''
 TAUP==''
+MCBARINT=''      # Monte carlo barostat interval in steps
 GAMMA_LN=''
-TAUP=''
 DT=''
 NSCM=0
 NTWX=500
@@ -621,6 +622,7 @@ ParseAmberOptions() {
       'tempi'         ) shift ; TEMPI=$1 ;;
       'tautp'         ) shift ; TAUTP=$1 ;;
       'taup'          ) shift ; TAUP=$1 ;;
+      'mcbarint'      ) shift ; MCBARINT=$1 ;;
       'gamma_ln'      ) shift ; GAMMA_LN=$1 ;;
       'dt'            ) shift ; DT=$1 ;;
       'nscm'          ) shift ; NSCM=$1 ;;
@@ -725,7 +727,7 @@ Barostat() {
   if [ "$BAROTYPE" = 'berendsen' ] ; then
     echo "   ntp = $NTPFLAG, taup = $TAUP, pres0 = 1.0," >> $1
   elif [ "$BAROTYPE" = 'montecarlo' ] ; then
-    echo "   ntp = $NTPFLAG, barostat = 2, pres0 = 1.0," >> $1
+    echo "   ntp = $NTPFLAG, barostat = 2, pres0 = 1.0, mcbarint = $MCBARINT," >> $1
   else
     echo "Unrecognized BAROTYPE $BAROTYPE"
     exit 1
@@ -756,6 +758,7 @@ CreateMdInput() {
   NTB=1
   TAUTP='1.0'
   TAUP='1.0'
+  MCBARINT=100
   GAMMA_LN='5'
   DT='0.001'
   NSCM=0
