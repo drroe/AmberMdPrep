@@ -3,6 +3,7 @@
 source ../MasterTest.sh
 
 # Simple test
+CleanFiles *.in
 
 UNITNAME='Simple test'
 RunTest -p ../tz2.ortho.parm7 -c ../tz2.ortho.rst7 --temp 300 --test

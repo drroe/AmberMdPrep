@@ -6,11 +6,37 @@ RUNCOUNT=0
 FAILCOUNT=0
 TEST_OUTPUT='test.out'
 
-if [ -f "$TEST_OUTPUT" ] ; then
-  rm $TEST_OUTPUT
-fi
+# CleanFiles() <file1> ... <fileN>
+#   For every arg passed to the function, check for the file or directory and
+#   remove it.
+CleanFiles() {
+  while [ ! -z "$1" ] ; do
+    if [ -d "$1" ] ; then
+      rmdir $1
+    elif [ -f "$1" ] ; then
+      rm $1
+    fi
+    shift
+  done
+}
 
+CleanFiles $TEST_OUTPUT *.diff
+
+# Parse test options
+CLEAN=0
+while [ ! -z "$1" ] ; do
+  case "$1" in
+    'clean' ) CLEAN=1 ;;
+  esac
+  shift
+done
+
+# Run Test
 RunTest() {
+  # If cleaning, just exit now
+  if [ $CLEAN -eq 1 ] ; then
+    exit 0
+  fi
   ((RUNCOUNT++))
   echo ""
   echo "TEST: $UNITNAME"
@@ -55,8 +81,12 @@ EndTest() {
   else
     echo "All $RUNCOUNT executions ran."
   fi
-  echo "$ERRCOUNT of $TESTCOUNT comparisons failed."
-  echo "$OKCOUNT of $TESTCOUNT comparisons passed."
+  if [ $ERRCOUNT -gt 0 ] ; then
+    echo "$ERRCOUNT of $TESTCOUNT comparisons failed."
+    echo "$OKCOUNT of $TESTCOUNT comparisons passed."
+  else
+    echo "All $TESTCOUNT comparisons passed."
+  fi
   echo ""
   exit $ERRCOUNT
 }
