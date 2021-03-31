@@ -404,7 +404,7 @@ while [ ! -z "$1" ] ; do
     '--finalthermo' ) shift ; FINALTHERMO=$1 ;;
     '--finalbaro'   ) shift ; FINALBARO=$1 ;;
     #'--evaltype'    ) shift ; EVALTYPE=$1 ;;
-    '--skipfinaleq' ) shift ; EVALTYPE='' ;;
+    '--skipfinaleq' ) EVALTYPE='' ;;
     '--mask'        ) shift ; ADDITIONALMASK=$1 ;;
     '--ares'        ) shift ; ADDEDRES="$ADDEDRES $1" ;;
     '--pmask'       ) shift ; PRODUCTIONMASK=$1 ;;
@@ -841,10 +841,10 @@ NoRestartEq() {
 
 # Final density Equil
 FinalEq() {
-  if [ -z "$EVALTYPE" ] ; then
-    echo "--evaltype not specified; skipping final density equilibration."
-    return 0
-  fi
+  #if [ -z "$EVALTYPE" ] ; then
+  #  echo "--evaltype not specified; skipping final density equilibration."
+  #  return 0
+  #fi
   echo "Starting final density equilibration."
   THERMOTYPE=$FINALTHERMO
   BAROTYPE=$FINALBARO
