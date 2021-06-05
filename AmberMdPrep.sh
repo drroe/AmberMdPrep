@@ -222,6 +222,7 @@ DetectSystemType() {
         nlipid++;
         print $2 >> tmplipid;
       } else if ($2 == "0GB" ||
+                 $2 == "1GB" ||
                  $2 == "4GB" ||
                  $2 == "0YA" ||
                  $2 == "4YA" ||
@@ -234,6 +235,7 @@ DetectSystemType() {
                  $2 == "VMB" ||
                  $2 == "0SA" ||
                  $2 == "6LB" ||
+                 $2 == "OH"  ||
                  $2 == "ROH")
       {
         ncarbo++;
