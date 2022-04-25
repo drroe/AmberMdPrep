@@ -334,6 +334,7 @@ KeyHelp() {
   echo "  'irest'" 
   echo "  'nstlim'"
   echo "  'ntb'"
+  echo "  'ntc'"
   echo "  'cut'"
   echo "  'tempi'"
   echo "  'tautp'"
@@ -350,6 +351,7 @@ KeyHelp() {
   echo "  'bbrst'"
   echo "  'thermo'"
   echo "  'baro'"
+  echo "  'flexiblewat' : shorthand for ntc=ntf=1, jfastw=4"
 }
 
 # ------------------------------------------------------------------------------
@@ -360,7 +362,10 @@ Help() {
   echo "  -c <file>            : Coordinates (required)"
   echo "  --temp <temp>        : Temperature (required)"
   echo " Optional:"
-  echo "  -i <file>            : File containing custom minimization steps."
+  echo "  -i <file>            : File containing custom minimization/MD steps."
+  echo "                         Lines starting with 'min' are minimization steps."
+  echo "                         Lines starting with 'md' are MD steps."
+  echo "                         Use '--keyhelp' for recognized keys to set up steps."
   echo "  --thermo <type>      : Thermostat: berendsen, langevin (default)"
   echo "  --baro <type>        : Barostat: berendsen, montecarlo (default)"
   echo "  --finalthermo <type> : Final stage thermostat: berendsen, langevin (default)"
@@ -605,6 +610,7 @@ NTWX=500
 NTPR=50
 NTWR=500
 CUT='8.0'
+JFASTW=''
 
 # ParseAmberOptions
 ParseAmberOptions() {
@@ -619,6 +625,8 @@ ParseAmberOptions() {
       'nstlim'        ) shift ; NSTLIM=$1 ;;
       'ntb'           ) shift ; NTB=$1 ;;
       'cut'           ) shift ; CUT=$1 ;;
+      'ntc'           ) shift ; NTC=$1 ; NTF=$1 ;;
+      'flexiblewat'   )         NTC=1 ; NTF=1 ; JFASTW='jfastw = 4,' ;;
       'tempi'         ) shift ; TEMPI=$1 ;;
       'tautp'         ) shift ; TAUTP=$1 ;;
       'taup'          ) shift ; TAUP=$1 ;;
@@ -696,7 +704,7 @@ Minimization: $MDIN
  &cntrl
    imin = 1, ntmin = $NTMIN, maxcyc = $MAXCYC, ncyc = $NCYC,
    ntwx = $NTWX, ioutfm = 1, ntxo = 2, ntpr = $NTPR, ntwr = $NTWR, 
-   ntc = 1, ntf = 1, ntb = 1, cut = $CUT,
+   ntc = 1, ntf = 1, ntb = 1, cut = $CUT, $JFASTW
 EOF
   CharmmWater
   RestraintLine
@@ -768,6 +776,8 @@ CreateMdInput() {
   RESTRAINTMASK=''
   RESTRAINT_WT=''
   TEMPI=$TEMP0
+  NTC=2
+  NTF=2
   ParseAmberOptions $*
   if [ $IREST -eq 0 ] ; then
     NTX=1
@@ -781,7 +791,7 @@ MD: $MDIN
    ntx = $NTX, irest = $IREST, ig = -1,
    ntwx = $NTWX, ntwv = -1, ioutfm = 1, ntxo = 2, ntpr = $NTPR, ntwr = $NTWR, 
    iwrap = 0, nscm = $NSCM,
-   ntc = 2, ntf = 2, ntb = $NTB, cut = $CUT,  
+   ntc = $NTC, ntf = $NTF, ntb = $NTB, cut = $CUT, $JFASTW 
 EOF
   Thermostat $MDIN
   if [ $NTB -eq 2 ] ; then
