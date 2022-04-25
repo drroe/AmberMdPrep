@@ -29,7 +29,10 @@ Command line options
   -c <file>            : Coordinates (required)
   --temp <temp>        : Temperature (required)
  Optional:
-  -i <file>            : File containing custom minimization steps (optional).
+  -i <file>            : File containing custom minimization/MD steps.
+                         Lines starting with 'min' are minimization steps.
+                         Lines starting with 'md' are MD steps.
+                         Use '--keyhelp' for recognized keys to set up steps.
   --thermo <type>      : Thermostat: berendsen, langevin (default)
   --baro <type>        : Barostat: berendsen, montecarlo (default)
   --finalthermo <type> : Final stage thermostat: berendsen, langevin (default)
