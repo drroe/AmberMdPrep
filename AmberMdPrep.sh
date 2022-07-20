@@ -46,6 +46,7 @@ BAROTYPE='montecarlo'   # Barostat type
 FINALTHERMO='langevin'  # Thermostat for final density eq.
 FINALBARO='montecarlo'  # Barostat for final density eq.
 NTPFLAG=1 # 1 for isotropic scaling, 2 for anisotropic
+FLEXIBLEWAT='' # Set to flexiblewat to ensure every MD step is OK for flexible waters
 STATUSFILE=''
 
 # ------------------------------------------------------------------------------
@@ -424,6 +425,7 @@ while [ ! -z "$1" ] ; do
     '--norestart'   ) RUNTYPE='norestart' ;;
     '--nprocs'      ) shift ; NPROCS=$1 ;;
     '--statusfile'  ) shift ; STATUSFILE=$1 ;;
+    '--flexiblewat' ) FLEXIBLEWAT='flexiblewat' ;;
     *               ) echo "Unrecognized command line option: $1" >> /dev/stderr ; exit 1 ;;
   esac
   shift
@@ -823,28 +825,28 @@ EOF
 
 # Standard Equil for explicit solvent
 StandardEq() {
-  CreateMinInput step1             heavyrst 5.0
-  CreateMdInput  step2 previousref heavyrst 5.0 nstlim 15000 tautp 0.5
-  CreateMinInput step3 previousref heavyrst 2.0
-  CreateMinInput step4 previousref heavyrst 0.1
-  CreateMinInput step5 previousref
-  CreateMdInput  step6 previousref heavyrst 1.0 ntb 2
-  CreateMdInput  step7             heavyrst 0.5 ntb 2 irest 1
-  CreateMdInput  step8             bbrst    0.5 ntb 2 irest 1 nstlim 10000
-  CreateMdInput  step9 ntb 2 dt 0.002 irest 1 nscm 1000
+  CreateMinInput step1             heavyrst 5.0 $FLEXIBLEWAT
+  CreateMdInput  step2 previousref heavyrst 5.0 nstlim 15000 tautp 0.5 $FLEXIBLEWAT
+  CreateMinInput step3 previousref heavyrst 2.0 $FLEXIBLEWAT
+  CreateMinInput step4 previousref heavyrst 0.1 $FLEXIBLEWAT
+  CreateMinInput step5 previousref $FLEXIBLEWAT
+  CreateMdInput  step6 previousref heavyrst 1.0 ntb 2 $FLEXIBLEWAT
+  CreateMdInput  step7             heavyrst 0.5 ntb 2 irest 1 $FLEXIBLEWAT
+  CreateMdInput  step8             bbrst    0.5 ntb 2 irest 1 nstlim 10000 $FLEXIBLEWAT
+  CreateMdInput  step9 ntb 2 dt 0.002 irest 1 nscm 1000 $FLEXIBLEWAT
   FinalEq
 }
 
 # Standard Equil for explicit solvent; reassign velocities every MD step
 NoRestartEq() {
-  CreateMinInput step1             heavyrst 5.0
-  CreateMdInput  step2 previousref heavyrst 5.0 nstlim 15000 tautp 0.5
-  CreateMinInput step3 previousref heavyrst 2.0
-  CreateMinInput step4 previousref heavyrst 0.1
-  CreateMinInput step5 previousref
-  CreateMdInput  step6 previousref heavyrst 1.0 ntb 2
-  CreateMdInput  step7             heavyrst 0.5 ntb 2
-  CreateMdInput  step8             bbrst    0.5 ntb 2 nstlim 10000
+  CreateMinInput step1             heavyrst 5.0 $FLEXIBLEWAT
+  CreateMdInput  step2 previousref heavyrst 5.0 nstlim 15000 tautp 0.5 $FLEXIBLEWAT
+  CreateMinInput step3 previousref heavyrst 2.0 $FLEXIBLEWAT
+  CreateMinInput step4 previousref heavyrst 0.1 $FLEXIBLEWAT
+  CreateMinInput step5 previousref $FLEXIBLEWAT
+  CreateMdInput  step6 previousref heavyrst 1.0 ntb 2 $FLEXIBLEWAT
+  CreateMdInput  step7             heavyrst 0.5 ntb 2 $FLEXIBLEWAT
+  CreateMdInput  step8             bbrst    0.5 ntb 2 nstlim 10000 $FLEXIBLEWAT
   CreateMdInput  step9 ntb 2 dt 0.002 nscm 1000
   FinalEq
 }
@@ -889,7 +891,7 @@ FinalEq() {
   OUTFILES=''
   while [ $DONE -eq 0 ] ; do
     echo "Final $num"
-    CreateMdInput final.$num ntb 2 dt 0.002 nscm 1000 nstlim 500000 ntwx 5000 ntpr 500 ntwr 50000 cut 9.0 irest $finalIrest
+    CreateMdInput final.$num ntb 2 dt 0.002 nscm 1000 nstlim 500000 ntwx 5000 ntpr 500 ntwr 50000 cut 9.0 irest $finalIrest $FLEXIBLEWAT
     # Decide if we are done. 0 = done, 2 = error, otherwise need more.
     ERR=2
     if [ $TEST -eq 1 ] ; then
