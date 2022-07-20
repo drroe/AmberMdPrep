@@ -47,6 +47,7 @@ FINALTHERMO='langevin'  # Thermostat for final density eq.
 FINALBARO='montecarlo'  # Barostat for final density eq.
 NTPFLAG=1 # 1 for isotropic scaling, 2 for anisotropic
 FLEXIBLEWAT='' # Set to flexiblewat to ensure every MD step is OK for flexible waters
+PRODUCTION_DT='0.002' # Default time step for 'production' steps (9 and final)
 STATUSFILE=''
 
 # ------------------------------------------------------------------------------
@@ -379,6 +380,7 @@ Help() {
   echo "  --pwt <weight>       : Restraint weight to use for '--pmask'; required if '--pmask' specified."
   echo "  --pref <file>        : Optional reference structure to use for '--pmask'."
   echo "  --charmmwater        : If specified assume CHARMM water (i.e. 'TIP3')."
+  echo "  --flexiblewat        : If specified assume solvent is flexible (e.g. SPC/FW)."
   echo "  --cutoff <cut>       : If specified, override default cutoffs with <cut>." 
   echo "  --test               : Test only. Do not run."
   echo "  --norestart          : Do standard Eq with no restarts."
@@ -425,7 +427,7 @@ while [ ! -z "$1" ] ; do
     '--norestart'   ) RUNTYPE='norestart' ;;
     '--nprocs'      ) shift ; NPROCS=$1 ;;
     '--statusfile'  ) shift ; STATUSFILE=$1 ;;
-    '--flexiblewat' ) FLEXIBLEWAT='flexiblewat' ;;
+    '--flexiblewat' ) FLEXIBLEWAT='flexiblewat' ; PRODUCTION_DT='0.001' ;;
     *               ) echo "Unrecognized command line option: $1" >> /dev/stderr ; exit 1 ;;
   esac
   shift
@@ -833,7 +835,7 @@ StandardEq() {
   CreateMdInput  step6 previousref heavyrst 1.0 ntb 2 $FLEXIBLEWAT
   CreateMdInput  step7             heavyrst 0.5 ntb 2 irest 1 $FLEXIBLEWAT
   CreateMdInput  step8             bbrst    0.5 ntb 2 irest 1 nstlim 10000 $FLEXIBLEWAT
-  CreateMdInput  step9 ntb 2 dt 0.002 irest 1 nscm 1000 $FLEXIBLEWAT
+  CreateMdInput  step9 ntb 2 dt $PRODUCTION_DT irest 1 nscm 1000 $FLEXIBLEWAT
   FinalEq
 }
 
@@ -847,7 +849,7 @@ NoRestartEq() {
   CreateMdInput  step6 previousref heavyrst 1.0 ntb 2 $FLEXIBLEWAT
   CreateMdInput  step7             heavyrst 0.5 ntb 2 $FLEXIBLEWAT
   CreateMdInput  step8             bbrst    0.5 ntb 2 nstlim 10000 $FLEXIBLEWAT
-  CreateMdInput  step9 ntb 2 dt 0.002 nscm 1000
+  CreateMdInput  step9 ntb 2 dt $PRODUCTION_DT nscm 1000
   FinalEq
 }
 
@@ -891,7 +893,7 @@ FinalEq() {
   OUTFILES=''
   while [ $DONE -eq 0 ] ; do
     echo "Final $num"
-    CreateMdInput final.$num ntb 2 dt 0.002 nscm 1000 nstlim 500000 ntwx 5000 ntpr 500 ntwr 50000 cut 9.0 irest $finalIrest $FLEXIBLEWAT
+    CreateMdInput final.$num ntb 2 dt $PRODUCTION_DT nscm 1000 nstlim 500000 ntwx 5000 ntpr 500 ntwr 50000 cut 9.0 irest $finalIrest $FLEXIBLEWAT
     # Decide if we are done. 0 = done, 2 = error, otherwise need more.
     ERR=2
     if [ $TEST -eq 1 ] ; then
