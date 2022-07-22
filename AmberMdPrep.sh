@@ -31,7 +31,7 @@ TEMP0=''
 TEMPI=''
 NPROCS=''  # Number of processes to use for CPU jobs
 OVERWRITE=0
-CHARMMWATERFLAG=0 # Set when charmm water present
+WATERFLAG=0 # Set based on solvent name: 0 - WAT, 1 - TIP3, 2 - SOL
 NPROTEIN=0 # Number of protein residues
 NDNA=0     # Number of DNA residues
 NRNA=0     # Number of RNA residues
@@ -39,6 +39,7 @@ NLIPID=0   # Number of lipid residues
 NCARBO=0   # Number of carbohydrate residues
 NUNKNOWN=0 # Number of unknown residues
 NCHARMMWATER=0
+NGMXWATER=0
 NWATER=0
 LIPIDRESNAMES=''       # Comma-separated list of unique lipid residue names
 THERMOTYPE='langevin'   # Thermostat type
@@ -78,6 +79,7 @@ DetectSystemType() {
     nlipid = 0;
     nunknown = 0;
     ncharmmwater = 0;
+    ngmxwater = 0;
     nwater = 0;
     ncarbo = 0;
   }{
@@ -241,6 +243,8 @@ DetectSystemType() {
         ncarbo++;
       } else if ($2 == "TIP3") {
         ncharmmwater++;
+      } else if ($2 == "SOL") {
+        ngmxwater++;
       } else if ($2 == "WAT") {
         nwater++;
       } else {
@@ -249,32 +253,38 @@ DetectSystemType() {
       }
     }
   }END{
-    printf("%i %i %i %i %i %i %i %i\n", nprotein, ndna, nrna, nlipid, nunknown, ncharmmwater, nwater, ncarbo);
+    printf("%i %i %i %i %i %i %i %i %i\n", nprotein, ndna, nrna, nlipid, nunknown, ncharmmwater, nwater, ncarbo, ngmxwater);
   }'`
   #echo "DEBUG: $systemNumbers"
   if [ $? -ne 0 -o -z "$systemNumbers" ] ; then
     echo "System detection failed."
     exit 1
   fi
-  NPROTEIN=`echo $systemNumbers | awk '{print $1;}'`
-  NDNA=`echo $systemNumbers | awk '{print $2;}'`
-  NRNA=`echo $systemNumbers | awk '{print $3;}'`
-  NLIPID=`echo $systemNumbers | awk '{print $4;}'`
-  NUNKNOWN=`echo $systemNumbers | awk '{print $5;}'`
+  NPROTEIN=`echo $systemNumbers     | awk '{print $1;}'`
+  NDNA=`echo $systemNumbers         | awk '{print $2;}'`
+  NRNA=`echo $systemNumbers         | awk '{print $3;}'`
+  NLIPID=`echo $systemNumbers       | awk '{print $4;}'`
+  NUNKNOWN=`echo $systemNumbers     | awk '{print $5;}'`
   NCHARMMWATER=`echo $systemNumbers | awk '{print $6;}'`
-  NWATER=`echo $systemNumbers | awk '{print $7;}'`
-  NCARBO=`echo $systemNumbers | awk '{print $8;}'`
+  NWATER=`echo $systemNumbers       | awk '{print $7;}'`
+  NCARBO=`echo $systemNumbers       | awk '{print $8;}'`
+  NGMXWATER=`echo $systemNumbers    | awk '{print $9;}'`
+  hasCharmmWater=0
+  hasGmxWater=0
   if [ $NCHARMMWATER -gt 0 ] ; then
-    if [ $NWATER -gt 0 ] ; then
-      echo "Error: Charmm water and regular water present."
+    if [ $NWATER -gt 0 -o $NGMXWATER -gt 0 ] ; then
+      echo "Error: Charmm water names (TIP3) are mixed with other water names."
       exit 1
     fi
     hasCharmmWater=1
-  else
-    hasCharmmWater=0
+  elif [ $NGMXWATER -gt 0 ] ; then
+    if [ $NWATER -gt 0 -o $NCHARMMWATER -gt 0 ] ; then
+      echo "Error: Gromacs water names (SOL) are mixed with other water names."
+      exit 1
+    fi
+    hasGmxWater=1
   fi
-  NWATER=`echo $systemNumbers | awk '{print $7;}'`
-  ((NTOTALWATER = $NCHARMMWATER + $NWATER))
+  ((NTOTALWATER = $NCHARMMWATER + $NGMXWATER + $NWATER))
   printf "  %i protein, %i dna, %i rna, %i lipid, %i carbohydrate, %i water, %i other\n" $NPROTEIN $NDNA $NRNA $NLIPID $NCARBO $NTOTALWATER $NUNKNOWN
   if [ $NLIPID -gt 0 ] ; then
     for lres in `sort $TMPLIPID | uniq` ; do
@@ -309,6 +319,7 @@ DetectSystemType() {
       fi
     done
     echo "  Unknown residues names: $UNKRESNAMES"
+    echo "  Check '$TMPUNKNOWN' for more details."
   fi
   if [ ! -z "$amask" ] ; then
     amask="$amask&!@H="
@@ -319,9 +330,13 @@ DetectSystemType() {
     fi
     ADDITIONALMASK=$amask
   fi
-  if [ $hasCharmmWater -eq 1 -a $CHARMMWATERFLAG -eq 0 ] ; then
+  if [ $hasCharmmWater -eq 1 -a $WATERFLAG -ne 1 ] ; then
     echo "  TIP3 residue detected - assuming CHARMM water present."
-    CHARMMWATERFLAG=1
+    WATERFLAG=1
+  fi
+  if [ $hasGmxWater -eq 1 -a $WATERFLAG -ne 2 ] ; then
+    echo "  SOL residue detected - assuming Gromacs water present."
+    WATERFLAG=2
   fi
 }
 
@@ -419,7 +434,8 @@ while [ ! -z "$1" ] ; do
     '--pwt'         ) shift ; PRODUCTIONWT=$1 ;;
     '--pref'        ) shift ; PRODUCTIONREF=$1 ;;
     '--cutoff'      ) shift ; MASTERCUT=$1 ;;
-    '--charmmwater' ) CHARMMWATERFLAG=1 ;;
+    '--charmmwater' ) WATERFLAG=1 ;;
+    '--gmxwater'    ) WATERFLAG=2 ;;
     '-O'            ) OVERWRITE=1 ;;
     '-h' | '--help' ) Help ; exit 0 ;;
     '--keyhelp'     ) KeyHelp ; exit 0 ;;
@@ -681,10 +697,12 @@ RestraintLine() {
   fi 
 }
 
-# CharmmWater
-CharmmWater() {
-  if [ $CHARMMWATERFLAG -eq 1 ] ; then
+# SetWaterFlags
+SetWaterFlags() {
+  if [ $WATERFLAG -eq 1 ] ; then
     echo "   WATNAM = 'TIP3', OWTNM = 'OH2'," >> $MDIN
+  elif [ $WATERFLAG -eq 2 ] ; then
+    echo "   WATNAM = 'SOL', OWTNM = 'OW', HWTNM1 = 'HW1', HWTNM2 = 'HW2'," >> $MDIN
   fi
 }
 
@@ -710,7 +728,7 @@ Minimization: $MDIN
    ntwx = $NTWX, ioutfm = 1, ntxo = 2, ntpr = $NTPR, ntwr = $NTWR, 
    ntc = 1, ntf = 1, ntb = 1, cut = $CUT, $JFASTW
 EOF
-  CharmmWater
+  SetWaterFlags
   RestraintLine
 cat >> $MDIN <<EOF
  &end
@@ -801,7 +819,7 @@ EOF
   if [ $NTB -eq 2 ] ; then
     Barostat $MDIN
   fi
-  CharmmWater
+  SetWaterFlags
   RestraintLine
 cat >> $MDIN <<EOF
  &end
