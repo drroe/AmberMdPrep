@@ -434,8 +434,14 @@ while [ ! -z "$1" ] ; do
 done
 REF=$CRD
 
-if [ ! -f "$TOP" -o ! -f "$CRD" ] ; then
-  echo "Specify top and coords." >> /dev/stderr
+echo "  TOP            : $TOP"
+echo "  CRD            : $CRD"
+if [ ! -f "$TOP" ] ; then
+  echo "Topology $TOP not found." >> /dev/stderr
+  exit 1
+fi
+if [ ! -f "$CRD" ] ; then
+  echo "Coords $CRD not found." >> /dev/stderr
   exit 1
 fi
 
@@ -564,8 +570,6 @@ if [ $S -gt 0 ] ; then
   fi
 fi
 
-echo "  TOP            : $TOP"
-echo "  CRD            : $CRD"
 echo "  NUM SOLUTE RES : $S"
 echo "  HEAVY MASK     : $HEAVYMASK"
 echo "  BACKBONE MASK  : $BACKBONEMASK"
