@@ -6,7 +6,7 @@
 # NIH/NHLBI
 # 2020-08-07
 
-VERSION='0.4 (beta)'
+VERSION='0.5 (beta)'
 MPIRUN=`which mpirun`
 CPPTRAJ=`which cpptraj`
 
@@ -928,10 +928,10 @@ EOF
           } else {
             if ($resultCol == "yes")
               exit 0;
-            else if ($resultCol == "no")
-              exit 1;
-            else
+            else if ($resultcol == "err")
               exit 2;
+            else
+              exit 1;
           }
         }' Eval.results
         ERR=$?

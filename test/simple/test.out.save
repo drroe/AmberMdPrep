@@ -1,8 +1,8 @@
-AmberMdPrep.sh Version 0.2 (beta)
-  13 protein, 0 dna, 0 rna, 0 lipid, 0 carbohydrate, 1691 water, 0 other
-  Detected types :  protein
+AmberMdPrep.sh Version 0.5 (beta)
   TOP            : ../tz2.ortho.parm7
   CRD            : ../tz2.ortho.rst7
+  13 protein, 0 dna, 0 rna, 0 lipid, 0 carbohydrate, 1691 water, 0 other
+  Detected types :  protein
   NUM SOLUTE RES : 13
   HEAVY MASK     : :1-13&!@H=
   BACKBONE MASK  : :1-13@H,N,CA,HA,C,O

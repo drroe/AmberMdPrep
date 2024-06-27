@@ -34,7 +34,7 @@ jobs:
         run: |
           git clone https://github.com/Amber-MD/cpptraj.git
           cd cpptraj
-          ./configure -nonetcdf -noblas -nolapack -noarpack -nozlib -nobzlib --nobuildlibs
+          ./configure -nonetcdf -noblas -nolapack -noarpack -nozlib -nobzlib -nofftw3 --nobuildlibs
           make -j2 install
           source cpptraj.sh
           cd ../test && make test
