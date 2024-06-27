@@ -928,10 +928,10 @@ EOF
           } else {
             if ($resultCol == "yes")
               exit 0;
-            else if ($resultCol == "no")
-              exit 1;
-            else
+            else if ($resultcol == "err")
               exit 2;
+            else
+              exit 1;
           }
         }' Eval.results
         ERR=$?
