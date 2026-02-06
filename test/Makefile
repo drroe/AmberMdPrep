@@ -3,9 +3,13 @@ test: test.all
 test.simple:
 	@-cd simple && ./RunTest.sh $(OPT)
 
+test.modifiedres:
+	@-cd modified.residues && ./RunTest.sh $(OPT)
+
 # Every test target should go here
 COMPLETETESTS= \
-  test.simple
+  test.simple \
+  test.modifiedres
 
 test.all:
 	$(MAKE) test.complete

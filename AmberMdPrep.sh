@@ -6,7 +6,7 @@
 # NIH/NHLBI
 # 2020-08-07
 
-VERSION='0.5 (beta)'
+VERSION='0.6 (beta)'
 MPIRUN=`which mpirun`
 CPPTRAJ=`which cpptraj`
 
@@ -71,7 +71,16 @@ DetectSystemType() {
   if [ -f "$TMPUNKNOWN" ] ; then
     rm $TMPUNKNOWN
   fi
-  systemNumbers=`$CPPTRAJ -p $1 --resmask \* | awk -v tmplipid="$TMPLIPID" -v tmpunknown="$TMPUNKNOWN" 'BEGIN{
+  TMPRESID='tmp.resid'
+  if [ -f "$TMPRESID" ] ; then
+    rm $TMPRESID
+  fi
+  TMPMASK='tmp.masks'
+  if [ -f "$TMPMASK" ] ; then
+    rm $TMPMASK
+  fi
+  # Identify each residue
+  systemNumbers=`$CPPTRAJ -p $1 --resmask \* | awk -v tmpmask="$TMPMASK" -v tmpresid="$TMPRESID" -v tmplipid="$TMPLIPID" -v tmpunknown="$TMPUNKNOWN" 'BEGIN{
     nprotein = 0;
     ndna = 0;
     nrna = 0;
@@ -80,7 +89,12 @@ DetectSystemType() {
     ncharmmwater = 0;
     nwater = 0;
     ncarbo = 0;
+
+    currentStart = -1;
+    lastType = "";
+    lastRes = -1;
   }{
+    currentResId = "unknown";
     if ($2 != "Name") {
       if ($2 == "ACE" ||
           $2 == "ALA" ||
@@ -148,6 +162,7 @@ DetectSystemType() {
           $2 == "NHIS" ||
           $2 == "NILE" ||
           $2 == "NLEU" ||
+          $2 == "NLN" ||
           $2 == "NLYS" ||
           $2 == "NME" ||
           $2 == "NMET" ||
@@ -158,6 +173,9 @@ DetectSystemType() {
           $2 == "NTRP" ||
           $2 == "NTYR" ||
           $2 == "NVAL" ||
+          $2 == "OLP" ||
+          $2 == "OLS" ||
+          $2 == "OLT" ||
           $2 == "PHE" ||
           $2 == "PRO" ||
           $2 == "SER" ||
@@ -165,8 +183,10 @@ DetectSystemType() {
           $2 == "TRP" ||
           $2 == "TYR" ||
           $2 == "VAL")
+      {
+        currentResId = "protein";
         nprotein++;
-      else if ($2 == "DA" ||
+      } else if ($2 == "DA" ||
                $2 == "DA3" ||
                $2 == "DA5" ||
                $2 == "DAN" ||
@@ -182,8 +202,10 @@ DetectSystemType() {
                $2 == "DT3" ||
                $2 == "DT5" ||
                $2 == "DTN")
+      {
+        currentResId = "nucleic";
         ndna++;
-      else if ($2 == "A" ||
+      } else if ($2 == "A" ||
                $2 == "A3" ||
                $2 == "A5" ||
                $2 == "AMP" ||
@@ -204,8 +226,10 @@ DetectSystemType() {
                $2 == "U5" ||
                $2 == "UMP" ||
                $2 == "UN")
+      {
+        currentResId = "nucleic";
         nrna++;
-      else if ($2 == "POPE" ||
+      } else if ($2 == "POPE" ||
                $2 == "DOPC" ||
                $2 == "AR" ||
                $2 == "CHL" ||
@@ -221,6 +245,7 @@ DetectSystemType() {
                $2 == "PS" ||
                $2 == "ST")
       {
+        currentResId = "lipid";
         nlipid++;
         print $2 >> tmplipid;
       } else if ($2 == "0GB" ||
@@ -231,27 +256,45 @@ DetectSystemType() {
                  $2 == "0YB" ||
                  $2 == "2MA" ||
                  $2 == "4YB" ||
-                 $2 == "NLN" ||
                  $2 == "UYB" ||
                  $2 == "VMB" ||
                  $2 == "0SA" ||
                  $2 == "6LB" ||
                  $2 == "ROH")
       {
+        currentResId = "carbohydrate";
         ncarbo++;
       } else if ($2 == "TIP3") {
+        currentResId = "water";
         ncharmmwater++;
       } else if ($2 == "WAT") {
+        currentResId = "water";
         nwater++;
       } else {
         nunknown++;
         print $2 >> tmpunknown;
       }
+      #printf("%i %s %s\n", $1, $2, currentResId) >> tmpresid; # DEBUG
+      if ( currentStart == -1 ) {
+        currentStart = $1;
+        lastType = currentResId;
+        lastRes = $1;
+      } else {
+        # Has the type changed?
+        if ( currentResId != lastType ) {
+          printf("%i-%i %s\n", currentStart, lastRes, lastType) >> tmpmask;
+          currentStart = $1;
+        }
+        lastType = currentResId;
+        lastRes = $1;
+      }
     }
   }END{
     printf("%i %i %i %i %i %i %i %i\n", nprotein, ndna, nrna, nlipid, nunknown, ncharmmwater, nwater, ncarbo);
+    printf("%i-%i %s\n", currentStart, lastRes, lastType) >> tmpmask;
   }'`
   #echo "DEBUG: $systemNumbers"
+  #cat $TMPRESID
   if [ $? -ne 0 -o -z "$systemNumbers" ] ; then
     echo "System detection failed."
     exit 1
@@ -273,7 +316,6 @@ DetectSystemType() {
   else
     hasCharmmWater=0
   fi
-  NWATER=`echo $systemNumbers | awk '{print $7;}'`
   ((NTOTALWATER = $NCHARMMWATER + $NWATER))
   printf "  %i protein, %i dna, %i rna, %i lipid, %i carbohydrate, %i water, %i other\n" $NPROTEIN $NDNA $NRNA $NLIPID $NCARBO $NTOTALWATER $NUNKNOWN
   if [ $NLIPID -gt 0 ] ; then
@@ -537,38 +579,31 @@ if [ $S -lt 1 -a -z "$ADDITIONALMASK" ] ; then
   exit 1
 fi
 
-AssignMask() {
-  if [ -z "$atommask" ] ; then
-    atommask=$1
-  else
-    atommask=$atommask",$1"
+# Generate the restraint mask expressions
+HEAVYMASK=''
+BACKBONEMASK=''
+while read MLINE ; do
+  resrange=`echo "$MLINE" | awk '{print $1;}'`
+  restype=`echo "$MLINE" | awk '{print $2;}'`
+  bbatoms='&!@H='
+  if [ "$restype" = 'protein' ] ; then
+    bbatoms='@H,N,CA,HA,C,O'
+  elif [ "$restype" = 'nucleic' ] ; then
+    bbatoms="@P,O5',C5',C4',C3',O3'"
   fi
-}
-
-# Set up solute mask
-if [ $S -gt 0 ] ; then
-  HEAVYMASK=":1-$S&!@H="
-  atommask=''
-  for rtype in $TYPE ; do
-    if [ "$rtype" = 'protein' ] ; then
-      AssignMask "H,N,CA,HA,C,O"
-    elif [ "$rtype" = 'nucleic' ] ; then
-      AssignMask "P,O5',C5',C4',C3',O3'"
-    elif [ "$rtype" != 'lipid' -a "$rtype" != 'carbo' ] ; then
-      echo "Unrecognized type: $rtype"
-      exit 1
+  if [ "$restype" != 'water' -a "$restype" != 'unknown' ] ; then
+    if [ -z "$HEAVYMASK" ] ; then
+      HEAVYMASK=":$resrange&!@H="
+    else
+      HEAVYMASK="$HEAVYMASK,:$resrange&!@H="
     fi
-  done
-  if [ -z "$atommask" ] ; then
-    # No types. Use HEAVYMASK.
-    BACKBONEMASK=$HEAVYMASK
-  else
-    BACKBONEMASK=":1-$S@$atommask"
-    if [ ! -z "$LIPIDRESNAMES" ] ; then
-      BACKBONEMASK=$BACKBONEMASK"|:$LIPIDRESNAMES&!@H="
+    if [ -z "$BACKBONEMASK" ] ; then
+      BACKBONEMASK=":$resrange$bbatoms"
+    else
+      BACKBONEMASK="$BACKBONEMASK,:$resrange$bbatoms"
     fi
   fi
-fi
+done < $TMPMASK
 
 echo "  NUM SOLUTE RES : $S"
 echo "  HEAVY MASK     : $HEAVYMASK"

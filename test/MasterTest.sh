@@ -31,6 +31,12 @@ while [ ! -z "$1" ] ; do
   shift
 done
 
+# Tests rely on cpptraj
+if [ -z "`which cpptraj`" ] ; then
+  echo "Tests require CPPTRAJ."
+  exit 1
+fi
+
 # Run Test
 RunTest() {
   # If cleaning, just exit now
