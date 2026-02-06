@@ -274,7 +274,7 @@ DetectSystemType() {
         nunknown++;
         print $2 >> tmpunknown;
       }
-      printf("%i %s %s\n", $1, $2, currentResId) >> tmpresid;
+      #printf("%i %s %s\n", $1, $2, currentResId) >> tmpresid; # DEBUG
       if ( currentStart == -1 ) {
         currentStart = $1;
         lastType = currentResId;
