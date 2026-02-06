@@ -6,8 +6,8 @@ AmberMdPrep.sh Version 0.6 (beta)
 Warning: Unknown residues detected; will be ignored for restraints.
   Detected types :  protein
   NUM SOLUTE RES : 11
-  HEAVY MASK     : :1-5&!@H=,:8-13&!@H=
-  BACKBONE MASK  : :1-5@H,N,CA,HA,C,O,:8-13@H,N,CA,HA,C,O
+  HEAVY MASK     : :1-5&!@H=|:8-13&!@H=
+  BACKBONE MASK  : :1-5@H,N,CA,HA,C,O|:8-13@H,N,CA,HA,C,O
   TEMPERATURE    : 300
   OVERWRITE      : 0
   MD COMMAND     : pmemd
