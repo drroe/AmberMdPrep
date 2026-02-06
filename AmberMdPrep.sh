@@ -203,7 +203,7 @@ DetectSystemType() {
                $2 == "DT5" ||
                $2 == "DTN")
       {
-        currentResId = "dna";
+        currentResId = "nucleic";
         ndna++;
       } else if ($2 == "A" ||
                $2 == "A3" ||
@@ -227,7 +227,7 @@ DetectSystemType() {
                $2 == "UMP" ||
                $2 == "UN")
       {
-        currentResId = "rna";
+        currentResId = "nucleic";
         nrna++;
       } else if ($2 == "POPE" ||
                $2 == "DOPC" ||
@@ -265,7 +265,7 @@ DetectSystemType() {
         currentResId = "carbohydrate";
         ncarbo++;
       } else if ($2 == "TIP3") {
-        currentResId = "charmmwater";
+        currentResId = "water";
         ncharmmwater++;
       } else if ($2 == "WAT") {
         currentResId = "water";
@@ -282,7 +282,7 @@ DetectSystemType() {
       } else {
         # Has the type changed?
         if ( currentResId != lastType ) {
-          printf("%i %i %s\n", currentStart, lastRes, lastType) >> tmpmask;
+          printf("%i-%i %s\n", currentStart, lastRes, lastType) >> tmpmask;
           currentStart = $1;
         }
         lastType = currentResId;
@@ -291,10 +291,10 @@ DetectSystemType() {
     }
   }END{
     printf("%i %i %i %i %i %i %i %i\n", nprotein, ndna, nrna, nlipid, nunknown, ncharmmwater, nwater, ncarbo);
-    printf("%i %i %s\n", currentStart, lastRes, lastType) >> tmpmask;
+    printf("%i-%i %s\n", currentStart, lastRes, lastType) >> tmpmask;
   }'`
   echo "DEBUG: $systemNumbers"
-  cat $TMPRESID
+  #cat $TMPRESID
   if [ $? -ne 0 -o -z "$systemNumbers" ] ; then
     echo "System detection failed."
     exit 1
@@ -589,32 +589,55 @@ AssignMask() {
 }
 
 # Generate the mask expressions
-
-
-# Set up solute mask
-if [ $S -gt 0 ] ; then
-  HEAVYMASK=":1-$S&!@H="
-  atommask=''
-  for rtype in $TYPE ; do
-    if [ "$rtype" = 'protein' ] ; then
-      AssignMask "H,N,CA,HA,C,O"
-    elif [ "$rtype" = 'nucleic' ] ; then
-      AssignMask "P,O5',C5',C4',C3',O3'"
-    elif [ "$rtype" != 'lipid' -a "$rtype" != 'carbo' ] ; then
-      echo "Unrecognized type: $rtype"
-      exit 1
+HEAVYMASK=''
+BACKBONEMASK=''
+while read MLINE ; do
+  resrange=`echo "$MLINE" | awk '{print $1;}'`
+  restype=`echo "$MLINE" | awk '{print $2;}'`
+  bbatoms='!@H='
+  if [ "$restype" = 'protein' ] ; then
+    bbatoms='@H,N,CA,HA,C,O'
+  elif [ "$restype" = 'nucleic' ] ; then
+    bbatoms="@P,O5',C5',C4',C3',O3'"
+  fi
+  if [ "$restype" != 'water' -a "$restype" != 'unknown' ] ; then
+    if [ -z "$HEAVYMASK" ] ; then
+      HEAVYMASK=":$resrange&!@H="
+    else
+      HEAVYMASK="$HEAVYMASK,:$resrange&!@H="
     fi
-  done
-  if [ -z "$atommask" ] ; then
-    # No types. Use HEAVYMASK.
-    BACKBONEMASK=$HEAVYMASK
-  else
-    BACKBONEMASK=":1-$S@$atommask"
-    if [ ! -z "$LIPIDRESNAMES" ] ; then
-      BACKBONEMASK=$BACKBONEMASK"|:$LIPIDRESNAMES&!@H="
+    if [ -z "$BACKBONEMASK" ] ; then
+      BACKBONEMASK=":$resrange&$bbatoms"
+    else
+      BACKBONEMASK="$BACKBONEMASK,:$resrange&$bbatoms"
     fi
   fi
-fi
+done < $TMPMASK
+
+# Set up solute mask
+#if [ $S -gt 0 ] ; then
+#  HEAVYMASK=":1-$S&!@H="
+#  atommask=''
+#  for rtype in $TYPE ; do
+#    if [ "$rtype" = 'protein' ] ; then
+#      AssignMask "H,N,CA,HA,C,O"
+#    elif [ "$rtype" = 'nucleic' ] ; then
+#      AssignMask "P,O5',C5',C4',C3',O3'"
+#    elif [ "$rtype" != 'lipid' -a "$rtype" != 'carbo' ] ; then
+#      echo "Unrecognized type: $rtype"
+#      exit 1
+#    fi
+#  done
+#  if [ -z "$atommask" ] ; then
+#    # No types. Use HEAVYMASK.
+#    BACKBONEMASK=$HEAVYMASK
+#  else
+#    BACKBONEMASK=":1-$S@$atommask"
+#    if [ ! -z "$LIPIDRESNAMES" ] ; then
+#      BACKBONEMASK=$BACKBONEMASK"|:$LIPIDRESNAMES&!@H="
+#    fi
+#  fi
+#fi
 
 echo "  NUM SOLUTE RES : $S"
 echo "  HEAVY MASK     : $HEAVYMASK"
