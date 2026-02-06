@@ -6,7 +6,7 @@
 # NIH/NHLBI
 # 2020-08-07
 
-VERSION='0.6 (beta)'
+VERSION='0.7 (beta)'
 MPIRUN=`which mpirun`
 CPPTRAJ=`which cpptraj`
 
