@@ -75,8 +75,12 @@ DetectSystemType() {
   if [ -f "$TMPRESID" ] ; then
     rm $TMPRESID
   fi
+  TMPMASK='tmp.masks'
+  if [ -f "$TMPMASK" ] ; then
+    rm $TMPMASK
+  fi
   # Identify each residue
-  systemNumbers=`$CPPTRAJ -p $1 --resmask \* | awk -v tmpresid="$TMPRESID" -v tmplipid="$TMPLIPID" -v tmpunknown="$TMPUNKNOWN" 'BEGIN{
+  systemNumbers=`$CPPTRAJ -p $1 --resmask \* | awk -v tmpmask="$TMPMASK" -v tmpresid="$TMPRESID" -v tmplipid="$TMPLIPID" -v tmpunknown="$TMPUNKNOWN" 'BEGIN{
     nprotein = 0;
     ndna = 0;
     nrna = 0;
@@ -85,6 +89,10 @@ DetectSystemType() {
     ncharmmwater = 0;
     nwater = 0;
     ncarbo = 0;
+
+    currentStart = -1;
+    lastType = "";
+    lastRes = -1;
   }{
     currentResId = "unknown";
     if ($2 != "Name") {
@@ -267,9 +275,23 @@ DetectSystemType() {
         print $2 >> tmpunknown;
       }
       printf("%i %s %s\n", $1, $2, currentResId) >> tmpresid;
+      if ( currentStart == -1 ) {
+        currentStart = $1;
+        lastType = currentResId;
+        lastRes = $1;
+      } else {
+        # Has the type changed?
+        if ( currentResId != lastType ) {
+          printf("%i %i %s\n", currentStart, lastRes, lastType) >> tmpmask;
+          currentStart = $1;
+        }
+        lastType = currentResId;
+        lastRes = $1;
+      }
     }
   }END{
     printf("%i %i %i %i %i %i %i %i\n", nprotein, ndna, nrna, nlipid, nunknown, ncharmmwater, nwater, ncarbo);
+    printf("%i %i %s\n", currentStart, lastRes, lastType) >> tmpmask;
   }'`
   echo "DEBUG: $systemNumbers"
   cat $TMPRESID
@@ -565,6 +587,9 @@ AssignMask() {
     atommask=$atommask",$1"
   fi
 }
+
+# Generate the mask expressions
+
 
 # Set up solute mask
 if [ $S -gt 0 ] ; then
