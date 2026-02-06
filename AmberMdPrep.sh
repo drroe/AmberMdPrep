@@ -579,15 +579,7 @@ if [ $S -lt 1 -a -z "$ADDITIONALMASK" ] ; then
   exit 1
 fi
 
-AssignMask() {
-  if [ -z "$atommask" ] ; then
-    atommask=$1
-  else
-    atommask=$atommask",$1"
-  fi
-}
-
-# Generate the mask expressions
+# Generate the restraint mask expressions
 HEAVYMASK=''
 BACKBONEMASK=''
 while read MLINE ; do
@@ -612,31 +604,6 @@ while read MLINE ; do
     fi
   fi
 done < $TMPMASK
-
-# Set up solute mask
-#if [ $S -gt 0 ] ; then
-#  HEAVYMASK=":1-$S&!@H="
-#  atommask=''
-#  for rtype in $TYPE ; do
-#    if [ "$rtype" = 'protein' ] ; then
-#      AssignMask "H,N,CA,HA,C,O"
-#    elif [ "$rtype" = 'nucleic' ] ; then
-#      AssignMask "P,O5',C5',C4',C3',O3'"
-#    elif [ "$rtype" != 'lipid' -a "$rtype" != 'carbo' ] ; then
-#      echo "Unrecognized type: $rtype"
-#      exit 1
-#    fi
-#  done
-#  if [ -z "$atommask" ] ; then
-#    # No types. Use HEAVYMASK.
-#    BACKBONEMASK=$HEAVYMASK
-#  else
-#    BACKBONEMASK=":1-$S@$atommask"
-#    if [ ! -z "$LIPIDRESNAMES" ] ; then
-#      BACKBONEMASK=$BACKBONEMASK"|:$LIPIDRESNAMES&!@H="
-#    fi
-#  fi
-#fi
 
 echo "  NUM SOLUTE RES : $S"
 echo "  HEAVY MASK     : $HEAVYMASK"
