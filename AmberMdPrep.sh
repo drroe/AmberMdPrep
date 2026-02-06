@@ -293,7 +293,7 @@ DetectSystemType() {
     printf("%i %i %i %i %i %i %i %i\n", nprotein, ndna, nrna, nlipid, nunknown, ncharmmwater, nwater, ncarbo);
     printf("%i-%i %s\n", currentStart, lastRes, lastType) >> tmpmask;
   }'`
-  echo "DEBUG: $systemNumbers"
+  #echo "DEBUG: $systemNumbers"
   #cat $TMPRESID
   if [ $? -ne 0 -o -z "$systemNumbers" ] ; then
     echo "System detection failed."
@@ -316,7 +316,6 @@ DetectSystemType() {
   else
     hasCharmmWater=0
   fi
-  NWATER=`echo $systemNumbers | awk '{print $7;}'`
   ((NTOTALWATER = $NCHARMMWATER + $NWATER))
   printf "  %i protein, %i dna, %i rna, %i lipid, %i carbohydrate, %i water, %i other\n" $NPROTEIN $NDNA $NRNA $NLIPID $NCARBO $NTOTALWATER $NUNKNOWN
   if [ $NLIPID -gt 0 ] ; then
@@ -594,7 +593,7 @@ BACKBONEMASK=''
 while read MLINE ; do
   resrange=`echo "$MLINE" | awk '{print $1;}'`
   restype=`echo "$MLINE" | awk '{print $2;}'`
-  bbatoms='!@H='
+  bbatoms='&!@H='
   if [ "$restype" = 'protein' ] ; then
     bbatoms='@H,N,CA,HA,C,O'
   elif [ "$restype" = 'nucleic' ] ; then
@@ -607,9 +606,9 @@ while read MLINE ; do
       HEAVYMASK="$HEAVYMASK,:$resrange&!@H="
     fi
     if [ -z "$BACKBONEMASK" ] ; then
-      BACKBONEMASK=":$resrange&$bbatoms"
+      BACKBONEMASK=":$resrange$bbatoms"
     else
-      BACKBONEMASK="$BACKBONEMASK,:$resrange&$bbatoms"
+      BACKBONEMASK="$BACKBONEMASK,:$resrange$bbatoms"
     fi
   fi
 done < $TMPMASK
