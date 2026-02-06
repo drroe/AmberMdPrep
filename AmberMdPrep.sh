@@ -6,7 +6,7 @@
 # NIH/NHLBI
 # 2020-08-07
 
-VERSION='0.5 (beta)'
+VERSION='0.6 (beta)'
 MPIRUN=`which mpirun`
 CPPTRAJ=`which cpptraj`
 
@@ -71,7 +71,12 @@ DetectSystemType() {
   if [ -f "$TMPUNKNOWN" ] ; then
     rm $TMPUNKNOWN
   fi
-  systemNumbers=`$CPPTRAJ -p $1 --resmask \* | awk -v tmplipid="$TMPLIPID" -v tmpunknown="$TMPUNKNOWN" 'BEGIN{
+  TMPRESID='tmp.resid'
+  if [ -f "$TMPRESID" ] ; then
+    rm $TMPRESID
+  fi
+  # Identify each residue
+  systemNumbers=`$CPPTRAJ -p $1 --resmask \* | awk -v tmpresid="$TMPRESID" -v tmplipid="$TMPLIPID" -v tmpunknown="$TMPUNKNOWN" 'BEGIN{
     nprotein = 0;
     ndna = 0;
     nrna = 0;
@@ -81,6 +86,7 @@ DetectSystemType() {
     nwater = 0;
     ncarbo = 0;
   }{
+    currentResId = "unknown";
     if ($2 != "Name") {
       if ($2 == "ACE" ||
           $2 == "ALA" ||
@@ -165,8 +171,10 @@ DetectSystemType() {
           $2 == "TRP" ||
           $2 == "TYR" ||
           $2 == "VAL")
+      {
+        currentResId = "protein";
         nprotein++;
-      else if ($2 == "DA" ||
+      } else if ($2 == "DA" ||
                $2 == "DA3" ||
                $2 == "DA5" ||
                $2 == "DAN" ||
@@ -182,8 +190,10 @@ DetectSystemType() {
                $2 == "DT3" ||
                $2 == "DT5" ||
                $2 == "DTN")
+      {
+        currentResId = "dna";
         ndna++;
-      else if ($2 == "A" ||
+      } else if ($2 == "A" ||
                $2 == "A3" ||
                $2 == "A5" ||
                $2 == "AMP" ||
@@ -204,8 +214,10 @@ DetectSystemType() {
                $2 == "U5" ||
                $2 == "UMP" ||
                $2 == "UN")
+      {
+        currentResId = "rna";
         nrna++;
-      else if ($2 == "POPE" ||
+      } else if ($2 == "POPE" ||
                $2 == "DOPC" ||
                $2 == "AR" ||
                $2 == "CHL" ||
@@ -221,6 +233,7 @@ DetectSystemType() {
                $2 == "PS" ||
                $2 == "ST")
       {
+        currentResId = "lipid";
         nlipid++;
         print $2 >> tmplipid;
       } else if ($2 == "0GB" ||
@@ -238,20 +251,25 @@ DetectSystemType() {
                  $2 == "6LB" ||
                  $2 == "ROH")
       {
+        currentResId = "carbohydrate";
         ncarbo++;
       } else if ($2 == "TIP3") {
+        currentResId = "charmmwater";
         ncharmmwater++;
       } else if ($2 == "WAT") {
+        currentResId = "water";
         nwater++;
       } else {
         nunknown++;
         print $2 >> tmpunknown;
       }
+      printf("%i %s %s\n", $1, $2, currentResId) >> tmpresid;
     }
   }END{
     printf("%i %i %i %i %i %i %i %i\n", nprotein, ndna, nrna, nlipid, nunknown, ncharmmwater, nwater, ncarbo);
   }'`
-  #echo "DEBUG: $systemNumbers"
+  echo "DEBUG: $systemNumbers"
+  cat $TMPRESID
   if [ $? -ne 0 -o -z "$systemNumbers" ] ; then
     echo "System detection failed."
     exit 1
