@@ -6,7 +6,7 @@
 # NIH/NHLBI
 # 2020-08-07
 
-VERSION='0.7 (beta)'
+VERSION='0.8 (beta)'
 MPIRUN=`which mpirun`
 CPPTRAJ=`which cpptraj`
 
@@ -51,6 +51,15 @@ PRODUCTION_DT='0.002' # Default time step for 'production' steps (9 and final)
 STATUSFILE=''
 
 # ------------------------------------------------------------------------------
+# ReportStatus <message>
+# Report job status to stdout and STATUSFILE if not blank.
+ReportStatus() {
+  echo $1
+  if [ ! -z "$STATUSFILE" ] ; then
+    echo $1 > $STATUSFILE
+  fi
+}
+
 # DetectSystemType <topology file>
 # Use cpptraj to print out residues from a topology file. Determine the
 # type of each residue and keep track.
@@ -497,9 +506,7 @@ if [ ! -z "$PRODUCTIONMASK" -a -z "$PRODUCTIONWT" ] ; then
   exit 1
 fi
 
-if [ -z "$STATUSFILE" ] ; then
-  STATUSFILE=/dev/stdout
-else
+if [ ! -z "$STATUSFILE" ] ; then
   echo "Status file is $STATUSFILE"
 fi
 
@@ -855,7 +862,7 @@ EOF
     fi
     if [ $? -ne 0 ] ; then
       echo "Error: MD failed: $MDIN" >> /dev/stderr
-      echo "Equilibration failed" > $STATUSFILE
+      ReportStatus "Equilibration failed"
       exit 1
     fi
   else
@@ -979,11 +986,10 @@ EOF
       echo "Complete."
       DONE=1
       if [ $TEST -eq 0 ] ; then
-        echo "Equilibration success" > $STATUSFILE
+        ReportStatus "Equilibration success"
       fi
     elif [ $ERR -eq 2 ] ; then
-      echo "Equlibration eval failed"
-      echo "Equlibration eval failed" > $STATUSFILE
+      ReportStatus "Equlibration eval failed"
       break
     else
       INPCRD="final.$num.ncrst"
@@ -991,7 +997,7 @@ EOF
       # Safety valve
       if [ $num -gt 20 ] ; then
         echo "More than 20 iterations of final density equil required. Bailing out."
-        echo "Too many final iterations" > $STATUSFILE
+        ReportStatus "Too many final iterations"
         DONE=1
         continue
       fi
