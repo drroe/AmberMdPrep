@@ -1,0 +1,43 @@
+AmberMdPrep.sh Version 0.6 (beta)
+  TOP            : ../tz2.mod.ortho.parm7
+  CRD            : ../tz2.ortho.rst7
+  11 protein, 0 dna, 0 rna, 0 lipid, 0 carbohydrate, 1691 water, 2 other
+  Unknown residues names: XLY,XSN
+Warning: Unknown residues detected; will be ignored for restraints.
+  Detected types :  protein
+  NUM SOLUTE RES : 11
+  HEAVY MASK     : :1-5&!@H=,:8-13&!@H=
+  BACKBONE MASK  : :1-5@H,N,CA,HA,C,O,:8-13@H,N,CA,HA,C,O
+  TEMPERATURE    : 300
+  OVERWRITE      : 0
+  MD COMMAND     : pmemd
+  MIN COMMAND    : sander
+  NPROCS         : 4
+
+Performing standard min/equil
+Minimization: step1
+TEST: sander -O -i step1.in -p ../tz2.mod.ortho.parm7 -c ../tz2.ortho.rst7 -ref ../tz2.ortho.rst7 -o step1.out -x step1.nc -r step1.ncrst -inf step1.mdinfo
+MD: step2
+TEST: pmemd -O -i step2.in -p ../tz2.mod.ortho.parm7 -c step1.ncrst -ref step1.ncrst -o step2.out -x step2.nc -r step2.ncrst -inf step2.mdinfo
+Minimization: step3
+TEST: sander -O -i step3.in -p ../tz2.mod.ortho.parm7 -c step2.ncrst -ref step2.ncrst -o step3.out -x step3.nc -r step3.ncrst -inf step3.mdinfo
+Minimization: step4
+TEST: sander -O -i step4.in -p ../tz2.mod.ortho.parm7 -c step3.ncrst -ref step3.ncrst -o step4.out -x step4.nc -r step4.ncrst -inf step4.mdinfo
+Minimization: step5
+TEST: sander -O -i step5.in -p ../tz2.mod.ortho.parm7 -c step4.ncrst -ref step4.ncrst -o step5.out -x step5.nc -r step5.ncrst -inf step5.mdinfo
+MD: step6
+TEST: pmemd -O -i step6.in -p ../tz2.mod.ortho.parm7 -c step5.ncrst -ref step5.ncrst -o step6.out -x step6.nc -r step6.ncrst -inf step6.mdinfo
+MD: step7
+TEST: pmemd -O -i step7.in -p ../tz2.mod.ortho.parm7 -c step6.ncrst -ref step5.ncrst -o step7.out -x step7.nc -r step7.ncrst -inf step7.mdinfo
+MD: step8
+TEST: pmemd -O -i step8.in -p ../tz2.mod.ortho.parm7 -c step7.ncrst -ref step5.ncrst -o step8.out -x step8.nc -r step8.ncrst -inf step8.mdinfo
+MD: step9
+TEST: pmemd -O -i step9.in -p ../tz2.mod.ortho.parm7 -c step8.ncrst -ref step5.ncrst -o step9.out -x step9.nc -r step9.ncrst -inf step9.mdinfo
+Starting final density equilibration.
+Using CPPTRAJ to evaluate density plateau.
+Final 1
+MD: final.1
+TEST: pmemd -O -i final.1.in -p ../tz2.mod.ortho.parm7 -c step9.ncrst -ref step5.ncrst -o final.1.out -x final.1.nc -r final.1.ncrst -inf final.1.mdinfo
+Just testing, no final density eval.
+Skipping final density evaluation.
+Complete.
