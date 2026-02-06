@@ -595,12 +595,12 @@ while read MLINE ; do
     if [ -z "$HEAVYMASK" ] ; then
       HEAVYMASK=":$resrange&!@H="
     else
-      HEAVYMASK="$HEAVYMASK,:$resrange&!@H="
+      HEAVYMASK="$HEAVYMASK|:$resrange&!@H="
     fi
     if [ -z "$BACKBONEMASK" ] ; then
       BACKBONEMASK=":$resrange$bbatoms"
     else
-      BACKBONEMASK="$BACKBONEMASK,:$resrange$bbatoms"
+      BACKBONEMASK="$BACKBONEMASK|:$resrange$bbatoms"
     fi
   fi
 done < $TMPMASK
