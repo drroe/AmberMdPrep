@@ -154,6 +154,7 @@ DetectSystemType() {
           $2 == "NHIS" ||
           $2 == "NILE" ||
           $2 == "NLEU" ||
+          $2 == "NLN" ||
           $2 == "NLYS" ||
           $2 == "NME" ||
           $2 == "NMET" ||
@@ -164,6 +165,9 @@ DetectSystemType() {
           $2 == "NTRP" ||
           $2 == "NTYR" ||
           $2 == "NVAL" ||
+          $2 == "OLP" ||
+          $2 == "OLS" ||
+          $2 == "OLT" ||
           $2 == "PHE" ||
           $2 == "PRO" ||
           $2 == "SER" ||
@@ -244,7 +248,6 @@ DetectSystemType() {
                  $2 == "0YB" ||
                  $2 == "2MA" ||
                  $2 == "4YB" ||
-                 $2 == "NLN" ||
                  $2 == "UYB" ||
                  $2 == "VMB" ||
                  $2 == "0SA" ||
